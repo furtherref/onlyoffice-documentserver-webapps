@@ -420,16 +420,6 @@ define([
                 });
             }
 
-            if ( me.logo )
-                me.logo.children(0).on('click', function (e) {
-                    var _url = !!me.branding && !!me.branding.logo && (me.branding.logo.url!==undefined) ?
-                        me.branding.logo.url : '{{PUBLISHER_URL}}';
-                    if (_url) {
-                        var newDocumentPage = window.open(_url);
-                        newDocumentPage && newDocumentPage.focus();
-                    }
-                });
-
             if ( $panelUsers ) {
                 onResetUsers(storeUsers);
 
@@ -890,7 +880,6 @@ define([
                             _logoImage = logo.image;
                             this.logo.html('<img src="' + _logoImage + '" style="max-width:300px; max-height:20px; margin: 0;"/>');
                             this.logo.css({'background-image': 'none', width: 'auto'});
-                            (this.branding.logo.url || this.branding.logo.url===undefined) && this.logo.addClass('link');
                         }
                     }
 
@@ -1158,7 +1147,6 @@ define([
                         _logoImage = logo.image;
                         element.html('<img src="' + _logoImage + '" style="max-width:300px; max-height:20px; margin: 0;"/>');
                         element.css({'background-image': 'none', width: 'auto'});
-                        (value.logo.url || value.logo.url===undefined) && element.addClass('link');
                     }
                 }
             },
