@@ -1037,12 +1037,6 @@ DE.ApplicationController = new(function(){
 
                 value.logo.imageEmbedded && console.log("Obsolete: The 'imageEmbedded' parameter of the 'customization.logo' section is deprecated. Please use 'image' parameter instead.");
             }
-
-            if (value.logo.url) {
-                logo.attr('href', value.logo.url);
-            } else if (value.logo.url!==undefined) {
-                logo.removeAttr('href');logo.removeAttr('target');
-            }
         }
     }
 

@@ -187,8 +187,7 @@ class MainPage extends Component {
 
         let isBranding = true,
             isHideLogo = true,
-            customLogoImage = '',
-            customLogoUrl = '';
+            customLogoImage = '';
 
         if(!appOptions.isDisconnected && appOptions.isDocReady) {
             const { logo } = customization;
@@ -199,7 +198,6 @@ class MainPage extends Component {
 
                 if(logo.image || logo.imageDark || logo.imageLight) {
                     customLogoImage = colorTheme.type === 'dark' ? logo.imageDark ?? logo.image ?? logo.imageLight : logo.imageLight ?? logo.image ?? logo.imageDark;
-                    customLogoUrl = logo.url;
                 }
             } else {
                 isHideLogo = false;
@@ -220,9 +218,7 @@ class MainPage extends Component {
                         {/* Top Navbar */}
                         <Navbar id='editor-navbar' className={`main-navbar${!isHideLogo ? ' navbar-with-logo' : ''}`}>
                             {!isHideLogo &&
-                                <div className="main-logo" onClick={() => {
-                                    window.open(`${customLogoImage && customLogoUrl ? customLogoUrl : __PUBLISHER_URL__}`, "_blank");
-                                }}>
+                                <div className="main-logo">
                                     {customLogoImage ? 
                                         <img className='custom-logo-image' src={customLogoImage} />
                                     :

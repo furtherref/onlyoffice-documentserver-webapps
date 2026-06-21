@@ -92,8 +92,7 @@ const MainPage = inject('storeDocumentInfo', 'users', 'storeAppOptions', 'storeV
 
     let isBranding = true,
         isHideLogo = true,
-        customLogoImage = '',
-        customLogoUrl = '';
+        customLogoImage = '';
 
     if(!appOptions.isDisconnected && appOptions.isDocReady) {
         const { logo } = customization;
@@ -104,7 +103,6 @@ const MainPage = inject('storeDocumentInfo', 'users', 'storeAppOptions', 'storeV
 
             if(logo.image || logo.imageDark || logo.imageLight) {
                 customLogoImage = colorTheme.type === 'dark' ? logo.imageDark ?? logo.image ?? logo.imageLight : logo.imageLight ?? logo.image ?? logo.imageDark;
-                customLogoUrl = logo.url;
             }
         } else {
             isHideLogo = false;
@@ -299,9 +297,7 @@ const MainPage = inject('storeDocumentInfo', 'users', 'storeAppOptions', 'storeV
                 <Page name="home" className={`editor${!isHideLogo ? ' page-with-logo' : ''}`}>
                     <Navbar id='editor-navbar' className={`main-navbar${!isHideLogo ? ' navbar-with-logo' : ''}`}>
                         {!isHideLogo &&
-                            <div className="main-logo" onClick={() => {
-                                window.open(`${customLogoImage && customLogoUrl ? customLogoUrl : __PUBLISHER_URL__}`, "_blank");
-                            }}>
+                            <div className="main-logo">
                                 {customLogoImage ? 
                                     <img className='custom-logo-image' src={customLogoImage} />
                                 : 
