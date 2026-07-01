@@ -78,15 +78,18 @@ define([], function () {
             this.currentPluginPanel = $('.current-plugin-box', this.$el);
             this.currentPluginFrame = $('.current-plugin-frame', this.$el);
 
-            this.pluginClose = new Common.UI.Button({
-                parentEl: this.$el.find('.plugin-close'),
-                cls: 'btn-toolbar',
-                iconCls: 'toolbar__icon btn-close',
-                hint: this.textClosePanel
-            });
+            var xpadding = 0;
+            if (this.menu !== 'right') {
+                this.pluginClose = new Common.UI.Button({
+                    parentEl: this.$el.find('.plugin-close'),
+                    cls: 'btn-toolbar',
+                    iconCls: 'toolbar__icon btn-close',
+                    hint: this.textClosePanel
+                });
+                xpadding++;
+            }
 
-            var xpadding = 1;
-            if (this.sideMenuButton) {
+            if (this.sideMenuButton && this.menu !== 'right') {
                 this.pluginHide = new Common.UI.Button({
                     parentEl: this.$el.find('.plugin-hide'),
                     cls: 'btn-toolbar' + (this.menu==='right' ^ Common.UI.isRTL() ? ' icon-mirrored' : ''),

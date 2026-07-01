@@ -139,7 +139,7 @@ define([
                 resize: {
                     hidden: true,
                     autohide: false,
-                    min: -600,
+                    min: -800,
                     max: -260
                 }
             }];
@@ -147,7 +147,7 @@ define([
             if ( Common.UI.isRTL() ) {
                 [iarray[0].resize.min, iarray[0].resize.max] = [-600, -300];
                 [iarray[1].resize.min, iarray[1].resize.max] = [-600, -300];
-                [iarray[3].resize.min, iarray[3].resize.max] = [260, 600];
+                [iarray[3].resize.min, iarray[3].resize.max] = [260, 800];
 
                 [iarray[0], iarray[3]] = [iarray[3], iarray[0]];
                 [iarray[1], iarray[2]] = [iarray[2], iarray[1]];

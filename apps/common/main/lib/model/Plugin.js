@@ -69,6 +69,7 @@ define([
                 isUpdateOleOnResize: false,
                 buttons: [],
                 size: [800, 600],
+                panelWidth: undefined,
                 initOnSelectionChanged: false,
                 visible: true
             }
