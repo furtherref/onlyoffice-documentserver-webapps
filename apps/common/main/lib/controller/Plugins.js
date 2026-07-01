@@ -645,7 +645,8 @@ define([
                 baseUrl: model.get('baseUrl'),
                 onlyIcon: true,
                 value: pluginGuid,
-                type: 'plugin'
+                type: 'plugin',
+                panelWidth: variation.get_PanelWidth ? variation.get_PanelWidth() : undefined
             });
             button.render($button);
             var $panel = $('<div id="panel-plugins-' + name + '" class="plugin-panel' + (menu !== 'right' ? ' content-box' : '') + '" style="height: 100%;"></div>');
@@ -1346,7 +1347,8 @@ define([
                     baseUrl: baseUrl, // icons have a relative path, so need to use the base url
                     onlyIcon: true,
                     value: frameId,
-                    type: 'plugin'
+                    type: 'plugin',
+                    panelWidth: variation.panelWidth
                 });
             button.render($button);
             var $panel = $('<div id="panel-plugins-' + frameId + '" class="plugin-panel' + (menu !== 'right' ? ' content-box' : '') + '" style="height: 100%;"></div>');

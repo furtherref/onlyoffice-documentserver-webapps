@@ -43,6 +43,17 @@ var SCALE_MIN = 40;
 var MENU_SCALE_PART = 260;
 var MENU_BASE_WIDTH = 220;
 
+var PLUGIN_PANEL_MIN_WIDTH = 220;
+var PLUGIN_PANEL_MAX_WIDTH = 760;
+
+function getPluginPanelWidth(btn) {
+	var width = btn && btn.options ? btn.options.panelWidth : undefined;
+	if (typeof width !== 'number' || !isFinite(width) || width <= 0) {
+		return MENU_BASE_WIDTH;
+	}
+	return Math.min(Math.max(width, PLUGIN_PANEL_MIN_WIDTH), PLUGIN_PANEL_MAX_WIDTH);
+}
+
 define([
     'text!documenteditor/main/app/template/RightMenu.template',
     'jquery',
@@ -404,7 +415,7 @@ define([
                 if(isPlugin && widthFromStorage) {
                     this.$el.width(parseInt(widthFromStorage));
                 } else {
-                    this.setInnerWidth(MENU_BASE_WIDTH);
+                    this.setInnerWidth(isPlugin ? getPluginPanelWidth(btn) : MENU_BASE_WIDTH);
                 }
                 Common.NotificationCenter.trigger('layout:changed', 'rightmenu');
 
