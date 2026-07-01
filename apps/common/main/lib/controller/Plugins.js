@@ -228,7 +228,7 @@ define([
         onAfterRender: function(panel, guid, isActivated) {
             var me = this;
             isActivated && this.openUIPlugin(guid);
-            panel.pluginClose.on('click', _.bind(this.onToolClose, this, panel));
+            panel.pluginClose && panel.pluginClose.on('click', _.bind(this.onToolClose, this, panel));
             panel.pluginHide && panel.pluginHide.on('click', _.bind(this.onToolHide, this, panel));
             Common.NotificationCenter.on({
                 'layout:resizestart': function(e) {
