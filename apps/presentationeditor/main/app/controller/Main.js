@@ -1636,7 +1636,11 @@ define([
 
                     // Message on window close
                     window.onbeforeunload = _.bind(me.onBeforeUnload, me);
-                    window.onunload = _.bind(me.onUnload, me);
+                    // Chrome blocks legacy unload registration when Permissions-Policy disables it; pagehide keeps cleanup quiet.
+                    if (window.addEventListener)
+                        window.addEventListener('pagehide', _.bind(me.onUnload, me), false);
+                    else if (window.attachEvent)
+                        window.attachEvent('onunload', _.bind(me.onUnload, me));
                 } else
                     window.onbeforeunload = _.bind(me.onBeforeUnloadView, me);
             },
