@@ -60,6 +60,7 @@ define([
     'common/main/lib/view/OpenDialog',
     'common/main/lib/view/UserNameDialog',
     'common/main/lib/component/RadioBox',
+    'documenteditor/main/app/util/SaveStatusDelay',
 ], function () {
     'use strict';
 
@@ -67,6 +68,7 @@ define([
         var appHeader;
         var ApplyEditRights = Common.UI.blockOperations.ApplyEditRights;
         var LoadingDocument = Common.UI.blockOperations.LoadingDocument;
+        var SaveStatusDelay = DE.Utils.SaveStatusDelay;
 
         var mapCustomizationElements = {
             about: 'button#left-btn-about',
@@ -186,7 +188,7 @@ define([
 
                 this.stackMacrosRequests = [];
 
-                this._state = {isDisconnected: false, usersCount: 1, fastCoauth: true, lostEditingRights: false, licenseType: false, isDocModified: false, requireUserAction: true};
+                this._state = {isDisconnected: false, usersCount: 1, fastCoauth: true, lostEditingRights: false, licenseType: false, isDocModified: false, requireUserAction: true, saveStatusDirty: false};
                 this.languages = null;
 
                 // Initialize viewport
@@ -1098,14 +1100,8 @@ define([
                 if (action) {
                     this.setLongActionView(action)
                 } else {
-                    var me = this;
                     if ((id==Asc.c_oAscAsyncAction['Save'] || id==Asc.c_oAscAsyncAction['ForceSaveButton']) && !this.appOptions.isOffline) {
-                        if (this._state.fastCoauth && this._state.usersCount>1) {
-                            me._state.timerSave = setTimeout(function () {
-                                me.getApplication().getController('Statusbar').setStatusCaption(me.textChangesSaved, false, 3000);
-                            }, 500);
-                        } else
-                            me.getApplication().getController('Statusbar').setStatusCaption(me.textChangesSaved, false, 3000);
+                        this.showChangesSavedStatus();
                     } else
                         this.getApplication().getController('Statusbar').setStatusCaption('');
                 }
@@ -1145,8 +1141,35 @@ define([
                 }
             },
 
+            showChangesSavedStatus: function() {
+                var me = this,
+                    delay = SaveStatusDelay.getChangesSavedDelay({
+                        startedAt: this._state.saveStatusStartedAt,
+                        fastCoauth: this._state.fastCoauth,
+                        usersCount: this._state.usersCount
+                    }),
+                    showSavedStatus = function() {
+                        me._state.saveStatusStartedAt = 0;
+                        me._state.saveStatusDirty = false;
+                        me.getApplication().getController('Statusbar').setStatusCaption(me.textChangesSaved, false, 3000);
+                    };
+
+                clearTimeout(this._state.timerSave);
+                if (delay > 0)
+                    this._state.timerSave = setTimeout(showSavedStatus, delay);
+                else
+                    showSavedStatus();
+            },
+
+            showChangesSavingStatus: function() {
+                clearTimeout(this._state.timerSave);
+                this._state.saveStatusStartedAt = (new Date()).getTime();
+                this._state.saveStatusDirty = true;
+                this.getApplication().getController('Statusbar').setStatusCaption(this.saveTextText, true, SaveStatusDelay.minDisplayDelay);
+            },
+
             setLongActionView: function(action) {
-                var title = '', text = '', force = false;
+                var title = '', text = '', force = false, statusDelay = 0;
                 var statusCallback = null; // call after showing status
 
                 switch (action.id) {
@@ -1161,6 +1184,10 @@ define([
                         force = true;
                         title   = this.saveTitleText;
                         text    = (!this.appOptions.isOffline) ? this.saveTextText : '';
+                        if (text.length) {
+                            statusDelay = SaveStatusDelay.minDisplayDelay;
+                            this._state.saveStatusStartedAt = (new Date()).getTime();
+                        }
                         break;
 
                     case Asc.c_oAscAsyncAction['LoadDocumentFonts']:
@@ -1280,7 +1307,7 @@ define([
                     if (!this.isShowOpenDialog)
                         this.loadMask.show(action.id===Asc.c_oAscAsyncAction['Open']);
                 } else {
-                    this.getApplication().getController('Statusbar').setStatusCaption(text, force, 0, statusCallback);
+                    this.getApplication().getController('Statusbar').setStatusCaption(text, force, statusDelay, statusCallback);
                 }
             },
 
@@ -2550,7 +2577,8 @@ define([
             },
 
             updateWindowTitle: function(force) {
-                var isModified = this.api.isDocumentModified();
+                var isModified = this.api.isDocumentModified(),
+                    wasModified = this._state.isDocModified;
                 if (this._state.isDocModified !== isModified || force) {
                     var title = this.defaultTitleText;
 
@@ -2568,8 +2596,14 @@ define([
                         window.document.title = title;
 
                     this._isDocReady && (this._state.isDocModified !== isModified) && Common.Gateway.setDocumentModified(isModified);
-                    if (isModified && (!this._state.fastCoauth || this._state.usersCount<2))
-                        this.getApplication().getController('Statusbar').setStatusCaption('', true);
+                    if (isModified && (!this._state.fastCoauth || this._state.usersCount<2)) {
+                        if (this.appOptions.isEdit && !this.appOptions.isOffline)
+                            this.showChangesSavingStatus();
+                        else
+                            this.getApplication().getController('Statusbar').setStatusCaption('', true);
+                    } else if (!isModified && wasModified && this._state.saveStatusDirty && this.appOptions.isEdit && !this.appOptions.isOffline) {
+                        this.showChangesSavedStatus();
+                    }
 
                     this._state.isDocModified = isModified;
                 }
