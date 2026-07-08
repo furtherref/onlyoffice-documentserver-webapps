@@ -64,10 +64,15 @@ define([
                         var appOptions = me.getApplication().getController('Main').appOptions;
 
                         if ( !appOptions.isEditMailMerge && !appOptions.isEditDiagram && !appOptions.isEditOle ) {
-                            var tab = {action: 'plugins', caption: me.viewPlugins.groupCaption, dataHintTitle: 'E', layoutname: 'toolbar-plugins'};
+                            var pluginsTabAction = 'plugins',
+                                tab = {action: pluginsTabAction, caption: me.viewPlugins.groupCaption, dataHintTitle: 'E', layoutname: 'toolbar-plugins'},
+                                isHiddenTab = Common.UI.isHiddenToolbarTab ? Common.UI.isHiddenToolbarTab(tab) : true;
+
                             me.$toolbarPanelPlugins = me.viewPlugins.getPanel();
                             me.toolbar = toolbar;
-                            toolbar.addTab(tab, me.$toolbarPanelPlugins, Common.UI.LayoutManager.lastTabIdx);     // TODO: clear plugins list in left panel
+                            if (!isHiddenTab) {
+                                toolbar.addTab(tab, me.$toolbarPanelPlugins, Common.UI.LayoutManager.lastTabIdx);     // TODO: clear plugins list in left panel
+                            }
                         }
                     },
                     'tab:active': this.onActiveTab
