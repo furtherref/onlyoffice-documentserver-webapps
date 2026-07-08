@@ -89,7 +89,7 @@ define([], function () {
                 xpadding++;
             }
 
-            if (this.sideMenuButton && this.menu !== 'right') {
+            if (this.sideMenuButton) {
                 this.pluginHide = new Common.UI.Button({
                     parentEl: this.$el.find('.plugin-hide'),
                     cls: 'btn-toolbar' + (this.menu==='right' ^ Common.UI.isRTL() ? ' icon-mirrored' : ''),

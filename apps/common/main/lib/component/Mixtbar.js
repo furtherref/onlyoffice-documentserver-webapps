@@ -56,6 +56,25 @@ define([
         var optsFold = {timeout: 2000};
         var config = {};
         var btnsMore = [];
+        var HIDDEN_TOOLBAR_TABS = {
+            file: true,
+            plugins: true,
+            ai: true
+        };
+
+        function normalizeToolbarTabName(value) {
+            return (value || '').toString().trim().toLowerCase();
+        }
+
+        function isHiddenToolbarTab(tab) {
+            var action = normalizeToolbarTabName(tab && tab.action),
+                caption = normalizeToolbarTabName(tab && tab.caption);
+
+            return !!(HIDDEN_TOOLBAR_TABS[action] || HIDDEN_TOOLBAR_TABS[caption]);
+        }
+
+        Common.UI.HIDDEN_TOOLBAR_TABS = HIDDEN_TOOLBAR_TABS;
+        Common.UI.isHiddenToolbarTab = isHiddenToolbarTab;
 
         function setScrollButtonsDisabeled(){
             var scrollLeft = $boxTabs.scrollLeft();
@@ -146,13 +165,17 @@ define([
                         '<a class="scroll left" data-hint="0" data-hint-direction="bottom" data-hint-offset="-7, 0" data-hint-title="V"></a>' +
                     '</section>';
 
+                var visibleTabs = _.filter(options.tabs || [], function(item) {
+                    return (typeof item !== "object") || !isHiddenToolbarTab(item);
+                });
+
                 this.$layout = $(options.template({
-                    tabsmarkup: _.template(_template_tabs)({items: options.tabs}),
+                    tabsmarkup: _.template(_template_tabs)({items: visibleTabs}),
                     isRTL: Common.UI.isRTL(),
                     config: options.config
                 }));
 
-                config.tabs = options.tabs;
+                config.tabs = visibleTabs;
                 $(document.body).on('click', onClickDocument.bind(this));
 
                 Common.NotificationCenter.on('tab:visible', _.bind(function(action, visible){
@@ -442,6 +465,8 @@ define([
             },
 
             addTab: function (tab, panel, after) {
+                if (isHiddenToolbarTab(tab)) return;
+
                 function _get_tab_action(index) {
                     if (!config.tabs[index])
                         return _get_tab_action(--index);
@@ -453,6 +478,19 @@ define([
 
                 if (after===undefined || tab.aux)
                     after = config.tabs.length-1;
+
+                if (config.tabs.length < 1 || after < 0) {
+                    config.tabs.push(tab);
+
+                    (this.$tabs ? $boxTabs : this.$layout.find('.tabs > ul')).append(_tabTemplate(tab));
+                    if (panel) {
+                        (this.$boxpanels || this.$layout.find('.box-panels')).append(panel);
+                    }
+
+                    this.$tabs && (this.$tabs = $boxTabs.find('> li'));
+                    this.$panels && (this.$panels = this.$el.find('.box-panels > .panel'));
+                    return;
+                }
 
                 if (tab.aux) { // alwayw show tab at the end of toolbar
                     config.tabs.push(tab);
@@ -506,6 +544,7 @@ define([
 
             createTab: function(tab, visible) {
                 if (!tab.action || !tab.caption) return;
+                if (isHiddenToolbarTab(tab)) return;
 
                 var _panel = $('<section id="' + tab.action + '" class="panel" data-tab="' + tab.action + '"></section>');
                 this.addTab(tab, _panel, this.getLastTabIdx());
@@ -777,6 +816,7 @@ define([
 
             addCustomControls: function(tab, added, removed) {
                 if (!tab.action) return;
+                if (isHiddenToolbarTab(tab)) return;
 
                 var $panel = tab.action ? this.getTab(tab.action) || this.createTab(tab, true) || this.getTab('plugins') : null,
                     $morepanel = this.getMorePanel(tab.action),
