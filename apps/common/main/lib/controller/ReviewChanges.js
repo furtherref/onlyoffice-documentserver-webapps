@@ -183,6 +183,12 @@ define([
             return this;
         },
 
+        canChangeSpellcheck: function() {
+            return this.appConfig && this.appConfig.canChangeSpellcheck !== undefined
+                ? this.appConfig.canChangeSpellcheck
+                : Common.UI.FeaturesManager.canChange('spellcheck');
+        },
+
         loadDocument: function(data) {
             this.document = data.doc;
         },
@@ -673,7 +679,7 @@ define([
             state = (state == 'on');
             this.view && this.view.turnSpelling(state);
 
-            if (Common.UI.FeaturesManager.canChange('spellcheck') && !suspend) {
+            if (this.canChangeSpellcheck() && !suspend) {
                 Common.localStorage.setItem(this.appPrefix + "settings-spellcheck", state ? 1 : 0);
                 this.api.asc_setSpellCheck(state);
                 Common.Utils.InternalSettings.set(this.appPrefix + "settings-spellcheck", state);
@@ -1030,7 +1036,8 @@ define([
         },
 
         applySettings: function(menu) {
-            this.view && this.view.turnSpelling( Common.localStorage.getBool(this.appPrefix + "settings-spellcheck", true) );
+            if (this.canChangeSpellcheck())
+                this.view && this.view.turnSpelling( Common.localStorage.getBool(this.appPrefix + "settings-spellcheck", true) );
             this.view && this.view.turnCoAuthMode( Common.localStorage.getBool(this.appPrefix + "settings-coauthmode", true) );
             if ((this.appConfig.canReview || this.appConfig.canViewReview) && this.appConfig.reviewHoverMode)
                 this.onApiShowChange();

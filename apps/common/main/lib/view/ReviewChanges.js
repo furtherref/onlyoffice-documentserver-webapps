@@ -903,7 +903,9 @@ define([
                         dataHint: '0',
                         dataHintDirection: 'top',
                         dataHintOffset: 'small',
-                        visible:  Common.UI.FeaturesManager.canChange('spellcheck')
+                        visible: this.appConfig.canChangeSpellcheck !== undefined
+                            ? this.appConfig.canChangeSpellcheck
+                            : Common.UI.FeaturesManager.canChange('spellcheck')
                     });
                     this.btnsSpelling.push(button);
                     this.lockedControls.push(button);

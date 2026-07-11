@@ -207,7 +207,7 @@ define([
                 if (this.mode.canViewComments)
                     this.leftMenu.setOptionsPanel('comment', this.getApplication().getController('Common.Controllers.Comments').getView());
 
-                this.leftMenu.btnChat[(this.mode.canChat && !this.mode.isLightVersion) ? 'show' : 'hide']();
+                this.leftMenu.btnChat.hide();
                 if (this.mode.canChat)
                     this.leftMenu.setOptionsPanel('chat', this.getApplication().getController('Common.Controllers.Chat').getView('Common.Views.Chat'));
             } else {
@@ -531,7 +531,7 @@ define([
                     this.api.asc_setAutoSaveGap(value);
                 }
 
-                if (Common.UI.FeaturesManager.canChange('spellcheck')) {
+                if (this.mode.canChangeSpellcheck) {
                     value = Common.localStorage.getBool("de-settings-spellcheck", true);
                     Common.Utils.InternalSettings.set("de-settings-spellcheck", value);
                     this.api.asc_setSpellCheck(value);
