@@ -44,9 +44,12 @@
 define([
     'core',
     'documenteditor/main/app/view/Statusbar',
-    'common/main/lib/util/LanguageInfo'
+    'common/main/lib/util/LanguageInfo',
+    'documenteditor/main/app/util/StatusbarLanguage'
 ], function () {
     'use strict';
+
+    var StatusbarLanguage = DE.Utils.StatusbarLanguage;
 
     DE.Controllers.Statusbar = Backbone.Controller.extend(_.extend({
         models: [],
@@ -272,18 +275,22 @@ define([
         },
 
         _onTextLanguage: function(langId) {
-            var info = Common.util.LanguageInfo.getLocalLanguageName(langId);
-            var displayName = Common.util.LanguageInfo.getLocalLanguageDisplayName(langId);
-            this.statusbar.setLanguage({
-                value: info[0],
-                displayValue: (displayName ? displayName.native : ''),
-                code: langId
-            });
+            var code = StatusbarLanguage.normalizeCode(langId),
+                info = code === null
+                    ? null
+                    : Common.util.LanguageInfo.getLocalLanguageName(code),
+                displayName = code === null
+                    ? null
+                    : Common.util.LanguageInfo.getLocalLanguageDisplayName(code);
+
+            this.statusbar.setLanguage(
+                StatusbarLanguage.createCallbackInfo(code, info, displayName)
+            );
         },
 
         setLanguages: function(langs) {
-            this.langs = langs;
-            this.statusbar.reloadLanguages(langs);
+            this.langs = StatusbarLanguage.adaptLanguageList(langs);
+            this.statusbar.reloadLanguages(this.langs);
         },
 
         setStatusCaption: function(text, force, delay, callback) {
@@ -304,8 +311,11 @@ define([
             this.statusbar.$el.css('z-index', '');
         },
 
-        onLangMenu: function(obj, langid, title) {
-            this.api.put_TextPrLang(langid);
+        onLangMenu: function(obj, langid) {
+            var code = StatusbarLanguage.normalizeCode(langid);
+            if (code !== null) {
+                this.api.put_TextPrLang(code);
+            }
         },
 
         synchronizeChanges: function() {

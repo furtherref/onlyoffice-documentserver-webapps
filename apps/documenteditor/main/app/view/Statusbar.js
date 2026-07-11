@@ -43,9 +43,12 @@ define([
     'common/main/lib/component/Window',
     'documenteditor/main/app/model/Pages',
     'common/main/lib/component/InputField',
+    'documenteditor/main/app/util/StatusbarLanguage'
  ],
     function(template, $, _, Backbone){
         'use strict';
+
+        var StatusbarLanguage = DE.Utils.StatusbarLanguage;
 
         function _onCountPages(count){
             this.pages.set('count', count);
@@ -63,9 +66,7 @@ define([
         }
 
         function _clickLanguage(menu, item) {
-            this.langMenu.prevTip = item.value;
-            this.btnLanguage.setCaption(item.caption);
-            this.fireEvent('langchanged', [this, item.code, item.caption]);
+            this.onLanguageMenuClick(item);
         }
 
         function _onAppReady(config) {
@@ -199,6 +200,7 @@ define([
                     }
                 };
                 this._isDisabled = false;
+                this.currentLanguageCode = null;
 
                 var me = this;
                 this.$layout = $(this.template({
@@ -254,7 +256,7 @@ define([
                 this.btnLanguage = new Common.UI.Button({
                     cls         : 'btn-toolbar',
                     scaling     : false,
-                    caption     : 'English – United States',
+                    caption     : StatusbarLanguage.NEUTRAL_CAPTION,
                     hintAnchor  : 'top-left',
                     disabled: true,
                     dataHint    : '0',
@@ -373,7 +375,6 @@ define([
                 if ( !config || config.isEdit ) {
                     me.btnLanguage.render($('#btn-cnt-lang', me.$layout));
                     me.btnLanguage.setMenu(me.langMenu);
-                    me.langMenu.prevTip = 'en';
                 }
                 me.btnDocInfo.render($('#slot-status-btn-info', me.$layout));
 
@@ -423,47 +424,86 @@ define([
                 return this.$el && this.$el.is(':visible');
             },
 
-            reloadLanguages: function(array) {
-                var arr = [],
-                    saved = this.langMenu.saved;
-                _.each(array, function(item) {
-                    arr.push({
-                        caption     : item['displayValue'],
-                        captionEn   : item['displayValueEn'],
-                        value       : item['value'],
-                        code        : item['code'],
-                        checkable   : true,
-                        spellcheck  : item['spellcheck']
-                    });
-                });
-                this.langMenu.setRecent({
-                    count: Common.Utils.InternalSettings.get("app-settings-recent-langs-count") || 5,
-                    offset: Common.Utils.InternalSettings.get("app-settings-recent-langs-offset") || 0,
-                    key: 'app-settings-recent-langs',
-                    valueField: 'value'
-                });
-                this.langMenu.resetItems(arr);
-                if (this.langMenu.items.length>0) {
-                    var index = _.findIndex(this.langMenu.items, {caption: saved});
-                    (index>-1) && this.langMenu.setChecked(index, true);
-                    var isProtected = this._state.docProtection.isReadOnly || this._state.docProtection.isFormsOnly || this._state.docProtection.isCommentsOnly;
-                    this.btnLanguage.setDisabled(this._isDisabled || !!this.mode.isDisconnected || isProtected);
+            _syncLanguageMenuSelection: function() {
+                var index;
+
+                this.langMenu.clearAll();
+                index = StatusbarLanguage.findItemIndexByCode(
+                    this.langMenu.items,
+                    this.currentLanguageCode
+                );
+
+                if (index > -1) {
+                    this.langMenu.setChecked(index, true, true);
                 }
             },
 
-            setLanguage: function(info) {
-                if (this.langMenu.prevTip != info.value && info.code !== undefined) {
-                    this.btnLanguage.setCaption(info.displayValue);
-                    this.langMenu.prevTip = info.value;
+            onLanguageMenuClick: function(item) {
+                var code = StatusbarLanguage.normalizeCode(item && item.code);
 
-                    var index = _.findIndex(this.langMenu.items, {caption: info.displayValue});
-                    if (index>-1) {
-                        this.langMenu.setChecked(index, true);
-                    } else {
-                        this.langMenu.saved = info.displayValue;
-                        this.langMenu.clearAll();
-                    }
+                this._syncLanguageMenuSelection();
+                if (code !== null) {
+                    this.fireEvent('langchanged', [this, code]);
                 }
+            },
+
+            reloadLanguages: function(array) {
+                var arr = [],
+                    isProtected,
+                    isDisconnected;
+
+                _.each(array || [], function(item) {
+                    arr.push({
+                        caption: item.displayValue,
+                        captionEn: item.displayValueEn,
+                        value: item.value,
+                        code: item.code,
+                        checkable: true,
+                        spellcheck: item.spellcheck
+                    });
+                });
+
+                this.langMenu.setRecent({
+                    count: Common.Utils.InternalSettings.get(
+                        'app-settings-recent-langs-count'
+                    ) || 5,
+                    offset: Common.Utils.InternalSettings.get(
+                        'app-settings-recent-langs-offset'
+                    ) || 0,
+                    key: 'app-settings-recent-langs',
+                    valueField: 'value'
+                });
+
+                this.langMenu.resetItems(arr);
+                this._syncLanguageMenuSelection();
+
+                isProtected = this._state.docProtection.isReadOnly ||
+                    this._state.docProtection.isFormsOnly ||
+                    this._state.docProtection.isCommentsOnly;
+                isDisconnected = this.mode && this.mode.isDisconnected;
+
+                this.btnLanguage.setDisabled(
+                    arr.length < 1 ||
+                    this._isDisabled ||
+                    !!isDisconnected ||
+                    isProtected
+                );
+            },
+
+            setLanguage: function(info) {
+                var code;
+
+                info = info || {};
+                code = StatusbarLanguage.normalizeCode(info.code);
+                this.currentLanguageCode = code;
+
+                this.btnLanguage.setCaption(
+                    code === null
+                        ? StatusbarLanguage.NEUTRAL_CAPTION
+                        : info.displayValue || ''
+                );
+
+                this._syncLanguageMenuSelection();
             },
 
             getStatusLabel: function() {
