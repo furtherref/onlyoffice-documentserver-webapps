@@ -375,6 +375,7 @@ define([
                 if ( !config || config.isEdit ) {
                     me.btnLanguage.render($('#btn-cnt-lang', me.$layout));
                     me.btnLanguage.setMenu(me.langMenu);
+                    me.btnLanguage.hide();
                 }
                 me.btnDocInfo.render($('#slot-status-btn-info', me.$layout));
 

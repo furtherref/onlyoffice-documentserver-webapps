@@ -60,6 +60,7 @@ define([
     'common/main/lib/view/OpenDialog',
     'common/main/lib/view/UserNameDialog',
     'common/main/lib/component/RadioBox',
+    'documenteditor/main/app/util/SpellcheckSettings',
     'documenteditor/main/app/util/SaveStatusDelay',
 ], function () {
     'use strict';
@@ -68,6 +69,7 @@ define([
         var appHeader;
         var ApplyEditRights = Common.UI.blockOperations.ApplyEditRights;
         var LoadingDocument = Common.UI.blockOperations.LoadingDocument;
+        var SpellcheckSettings = DE.Utils.SpellcheckSettings;
         var SaveStatusDelay = DE.Utils.SaveStatusDelay;
 
         var mapCustomizationElements = {
@@ -1387,17 +1389,23 @@ define([
 
                 // spellcheck
                 value = Common.UI.FeaturesManager.getInitValue('spellcheck', true);
-                value = (value !== undefined) ? value : !(this.appOptions.customization && this.appOptions.customization.spellcheck===false);
+                value = SpellcheckSettings.resolveInitialValue(
+                    value,
+                    this.appOptions.customization
+                );
                 if (this.appOptions.customization && this.appOptions.customization.spellcheck!==undefined)
                     console.log("Obsolete: The 'spellcheck' parameter of the 'customization' section is deprecated. Please use 'spellcheck' parameter in the 'customization.features' section instead.");
-                if (Common.UI.FeaturesManager.canChange('spellcheck')) { // get from local storage
-                    value = Common.localStorage.getBool("de-settings-spellcheck", value);
-                    Common.Utils.InternalSettings.set("de-settings-spellcheck", value);
-                }
+                value = SpellcheckSettings.resolveUserPreference(
+                    Common.localStorage,
+                    "de-settings-spellcheck",
+                    value,
+                    this.appOptions.canChangeSpellcheck
+                );
+                Common.Utils.InternalSettings.set("de-settings-spellcheck", value);
                 me.api.asc_setSpellCheck(value);
                 Common.NotificationCenter.trigger('spelling:turn', value ? 'on' : 'off', true); // only toggle buttons
 
-                if (Common.UI.FeaturesManager.canChange('spellcheck')) { // get settings for spellcheck from local storage
+                if (this.appOptions.canChangeSpellcheck) { // get settings for spellcheck from local storage
                     value = Common.localStorage.getBool("de-spellcheck-ignore-uppercase-words", true);
                     Common.Utils.InternalSettings.set("de-spellcheck-ignore-uppercase-words", value);
                     value = Common.localStorage.getBool("de-spellcheck-ignore-numbers-words", true);
@@ -1830,6 +1838,7 @@ define([
                 this.appOptions.canBrandingExt = params.asc_getCanBranding() && (typeof this.editorConfig.customization == 'object' || this.editorConfig.plugins);
                 Common.UI.LayoutManager.init(this.editorConfig.customization ? this.editorConfig.customization.layout : null, this.appOptions.canBrandingExt, this.api);
                 this.editorConfig.customization && Common.UI.FeaturesManager.init(this.editorConfig.customization.features, this.appOptions.canBrandingExt);
+                this.appOptions.canChangeSpellcheck = SpellcheckSettings.canChange(Common.UI.FeaturesManager);
 
                 Common.UI.TabStyler.init(this.editorConfig.customization); // call after Common.UI.FeaturesManager.init() !!!
 

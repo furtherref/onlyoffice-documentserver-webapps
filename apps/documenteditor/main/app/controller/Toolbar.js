@@ -252,6 +252,7 @@ define([
                 this.toolbar.collapse();
             }, this));
             Common.NotificationCenter.on('tab:set-active', _.bind(function(action, needUnfold){
+                if (action === 'review' || action === 'protect') return;
                 this.toolbar.setTab(action);
                 needUnfold && this.onChangeCompactView(null, false, true);
             }, this));
@@ -3928,12 +3929,8 @@ define([
 
             me.toolbar.render(_.extend({isCompactView: editmode ? compactview : true}, config));
 
-            var tab = {action: 'review', caption: me.toolbar.textTabCollaboration, dataHintTitle: 'U', layoutname: 'toolbar-collaboration'};
+            var tab;
             var $panel = me.application.getController('Common.Controllers.ReviewChanges').createToolbarPanel();
-            if ( $panel ) {
-                me.toolbar.addTab(tab, $panel, 6);
-                me.toolbar.setVisible('review', (config.isEdit || config.canCoAuthoring && config.canComments) && Common.UI.LayoutManager.isElementVisible('toolbar-collaboration') ); // use config.canViewReview in review controller. set visible review tab in view mode only when asc_HaveRevisionsChanges
-            }
 
             if ( config.isEdit ) {
                 me.toolbar.setMode(config);
@@ -4006,8 +4003,6 @@ define([
                             $panel.append($('<div class="separator long"></div>'));
                         }
                         $panel.append(doctabController.createToolbarPanel());
-                        me.toolbar.addTab(tab, $panel, 7);
-                        me.toolbar.setVisible('protect', Common.UI.LayoutManager.isElementVisible('toolbar-protect'));
                         Array.prototype.push.apply(me.toolbar.lockControls, doctabButtons);
                     }
                 }
