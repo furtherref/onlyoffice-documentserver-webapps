@@ -14,16 +14,16 @@ function readSource(relativePath) {
     return fs.readFileSync(path.join(WEB_APPS_ROOT, relativePath), 'utf8');
 }
 
-test('document toolbar does not add collaboration or protection tabs',
+test('document toolbar adds collaboration but not protection tabs',
 function() {
     const source = readSource(
         'apps/documenteditor/main/app/controller/Toolbar.js'
     );
     const executableSource = source.replace(/^\s*\/\/.*$/gm, '');
 
-    assert.doesNotMatch(executableSource, /addTab\(tab, \$panel, 6\)/);
+    assert.match(executableSource, /addTab\(tab, \$panel, 6\)/);
     assert.doesNotMatch(executableSource, /addTab\(tab, \$panel, 7\)/);
-    assert.doesNotMatch(executableSource, /setVisible\('review'/);
+    assert.match(executableSource, /setVisible\('review'/);
     assert.doesNotMatch(executableSource, /setVisible\('protect'/);
     assert.match(
         source,
@@ -35,7 +35,7 @@ function() {
     );
 });
 
-test('hidden toolbar tabs ignore late activation events', function() {
+test('hidden protection tab still ignores late activation while review activates', function() {
     const callbacks = Object.create(null);
     const Common = {
         NotificationCenter: {
@@ -90,12 +90,12 @@ test('hidden toolbar tabs ignore late activation events', function() {
 
     callbacks['tab:set-active']('review', true);
     callbacks['tab:set-active']('protect', true);
-    assert.deepEqual(activated, []);
-    assert.equal(unfoldCalls, 0);
+    assert.deepEqual(activated, ['review']);
+    assert.equal(unfoldCalls, 1);
 
     callbacks['tab:set-active']('home', true);
-    assert.deepEqual(activated, ['home']);
-    assert.equal(unfoldCalls, 1);
+    assert.deepEqual(activated, ['review', 'home']);
+    assert.equal(unfoldCalls, 2);
 });
 
 test('document left menu keeps the chat entry hidden', function() {
@@ -105,6 +105,17 @@ test('document left menu keeps the chat entry hidden', function() {
 
     assert.doesNotMatch(source, /leftMenu\.btnChat\s*\[/);
     assert.match(source, /leftMenu\.btnChat\.hide\(\)/);
+});
+
+test('document editor disables chat and mail merge capabilities', function() {
+    const source = readSource(
+        'apps/documenteditor/main/app/controller/Main.js'
+    );
+
+    assert.match(
+        source,
+        /this\.appOptions\.canUseMailMerge\s*=\s*false;\s*this\.appOptions\.canChat\s*=\s*false;/
+    );
 });
 
 test('document status bar hides both language controls and separators',
