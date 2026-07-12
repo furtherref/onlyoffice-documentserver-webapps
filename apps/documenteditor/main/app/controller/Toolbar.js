@@ -252,7 +252,7 @@ define([
                 this.toolbar.collapse();
             }, this));
             Common.NotificationCenter.on('tab:set-active', _.bind(function(action, needUnfold){
-                if (action === 'review' || action === 'protect') return;
+                if (action === 'protect') return;
                 this.toolbar.setTab(action);
                 needUnfold && this.onChangeCompactView(null, false, true);
             }, this));
@@ -3929,8 +3929,12 @@ define([
 
             me.toolbar.render(_.extend({isCompactView: editmode ? compactview : true}, config));
 
-            var tab;
+            var tab = {action: 'review', caption: me.toolbar.textTabCollaboration, dataHintTitle: 'U', layoutname: 'toolbar-collaboration'};
             var $panel = me.application.getController('Common.Controllers.ReviewChanges').createToolbarPanel();
+            if ( $panel ) {
+                me.toolbar.addTab(tab, $panel, 6);
+                me.toolbar.setVisible('review', (config.isEdit || config.canCoAuthoring && config.canComments) && Common.UI.LayoutManager.isElementVisible('toolbar-collaboration'));
+            }
 
             if ( config.isEdit ) {
                 me.toolbar.setMode(config);
