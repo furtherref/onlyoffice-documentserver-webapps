@@ -45,7 +45,8 @@
 define([
     'backbone',
     'common/main/lib/component/BaseView',
-    'common/main/lib/mods/transition'
+    'common/main/lib/mods/transition',
+    'common/main/lib/component/PluginFieldGroup' // fork-specific: plugin `field-group` toolbar item
 ], function (Backbone) {
     'use strict';
 

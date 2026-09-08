@@ -1371,3 +1371,91 @@ section .field-styles {
         }
     }
 }
+
+// fork-specific: plugin toolbar `field-group` item (Common.UI.PluginFieldGroup).
+// Rows of label + read-only input + small icon button rendered inside a normal
+// `.btn-slot.text.x-huge` so Mixtbar overflow moves the whole group as one unit.
+.toolbar .plugin-field-group {
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    height: calc(@toolbar-group-height-ie + 12px);
+    height: calc(@toolbar-group-height + 12px);
+    // Use 6px of existing toolbar padding above and below; keep the slot height.
+    margin-top: -6px;
+    margin-bottom: -6px;
+    .font-size-normal(); // .group and .elset zero the font size
+    vertical-align: middle;
+
+    .plugin-field-row {
+        display: flex;
+        align-items: center;
+        height: calc((@toolbar-group-height-ie + 12px) / 3);
+        height: calc((@toolbar-group-height + 12px) / 3);
+        min-height: 0; // flex items must not grow past a third of the group
+        line-height: 1;
+        white-space: nowrap;
+    }
+
+    .plugin-field-label {
+        flex: 0 0 auto;
+        margin: 0;
+        .margin-right(4px);
+        line-height: 1;
+        color: @text-normal-ie;
+        color: @text-normal;
+    }
+
+    .plugin-field-input {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+
+        .input-field {
+            display: inline-flex;
+        }
+
+        input.form-control {
+            width: 120px;
+            height: calc((@toolbar-group-height-ie + 12px) / 3 - 4px);
+            height: calc((@toolbar-group-height + 12px) / 3 - 4px);
+            padding: 0 3px;
+            line-height: normal;
+            cursor: text;
+            background-color: @background-normal-ie;
+            background-color: @background-normal;
+        }
+    }
+
+    .plugin-field-action {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        .margin-left(4px);
+
+        .btn-toolbar.plugin-field-button {
+            display: inline-flex;
+            align-items: center;
+            height: calc((@toolbar-group-height-ie + 12px) / 3 - 4px);
+            height: calc((@toolbar-group-height + 12px) / 3 - 4px);
+            min-width: 0;
+            padding: 0 2px;
+
+            .icon {
+                width: 16px;
+                height: 16px;
+                min-width: 16px;
+                margin: 0;
+                line-height: 16px; // the icon's &nbsp; strut must not exceed the box
+                font-size: 0;
+                overflow: hidden;
+            }
+
+            .caption {
+                display: inline-block;
+                .padding-left(2px);
+                line-height: 1;
+            }
+        }
+    }
+}

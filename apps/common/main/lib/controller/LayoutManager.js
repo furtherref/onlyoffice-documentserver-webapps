@@ -254,6 +254,7 @@ Common.UI.LayoutManager = new(function() {
             plugin.tabs && plugin.tabs.forEach(function(tab) {
                 if (tab) {
                     var added = [],
+                        readiness = [],
                         removed = preventRemove ? [] : _findRemovedControls(toolbar, tab.id, plugin.guid, tab.items);
 
                     if (!_arrPlugins[plugin.guid])
@@ -272,6 +273,15 @@ Common.UI.LayoutManager = new(function() {
                         let btn = _findCustomControl(toolbar, tab.id, plugin.guid, item.id),
                             _set = Common.enumLock;
                         if (btn) { // change caption, hint, disable state, menu items
+                            if (Common.UI.PluginFieldGroup && btn instanceof Common.UI.PluginFieldGroup) { // fork-specific: field-group text patch
+                                var patch = btn.updateFrom(item);
+                                if (!patch.ok) {
+                                    console.warn('[plugins] field-group patch rejected for ' + plugin.guid + '/' + item.id + ': ' + patch.error);
+                                    return;
+                                }
+                                (patch.disabled!==undefined) && Common.Utils.lockControls(_set.customLock, !!patch.disabled, {array: [btn]});
+                                return;
+                            }
                             if (btn instanceof Common.UI.Button) {
                                 var caption = item.text || '';
                                 if (btn.options.caption !== (caption || ' ')) {
@@ -328,27 +338,68 @@ Common.UI.LayoutManager = new(function() {
                             }
                             added.push(btn);
                             item.disabled && Common.Utils.lockControls(_set.customLock, item.disabled, {array: [btn]});
+                        } else if (item.type==='field-group' && Common.UI.PluginFieldGroup) { // fork-specific: rows of label + read-only input + button
+                            var checked = Common.UI.PluginFieldGroup.validateItem(item);
+                            if (!checked.ok) {
+                                console.warn('[plugins] field-group rejected for ' + plugin.guid + '/' + item.id + ': ' + checked.error);
+                                return;
+                            }
+                            var group = checked.item;
+                            btn = new Common.UI.PluginFieldGroup({
+                                rows: group.rows,
+                                value: group.id,
+                                guid: plugin.guid,
+                                tabid: tab.id,
+                                separator: group.separator,
+                                lock: group.lockInViewMode ? [_set.customLock, _set.viewMode, _set.previewReviewMode, _set.viewFormMode, _set.docLockView, _set.docLockForms, _set.docLockComments, _set.selRangeEdit, _set.editFormula ] : [_set.customLock],
+                                dataHint: '1',
+                                dataHintDirection: 'bottom',
+                                dataHintOffset: 'small'
+                            });
+                            btn.on('click', function(g, rowButton) {
+                                if (!g.isDisabled() && !(rowButton && rowButton.isDisabled && rowButton.isDisabled()))
+                                    callback && callback(g.options.guid, rowButton.options.value, false);
+                            });
+                            added.push(btn);
+                            group.readyEventId && readiness.push({guid: plugin.guid, id: group.readyEventId});
+                            (group.disabled!==undefined) && Common.Utils.lockControls(_set.customLock, group.disabled, {array: [btn]});
                         }
                     });
 
                     toolbar.addCustomControls({action: tab.id, caption: tab.text || ''}, added, removed);
+                    _disposeFieldGroups(removed);
+                    // fork-specific: acknowledge rendered field groups once, after they are registered below
+                    var ready = readiness.splice(0);
                     if (!toolbar.customButtonsArr)
                         toolbar.customButtonsArr = [];
                     if (!toolbar.customButtonsArr[plugin.guid])
                         toolbar.customButtonsArr[plugin.guid] = [];
                     Array.prototype.push.apply(toolbar.customButtonsArr[plugin.guid], added);
                     Array.prototype.push.apply(btns, added);
+                    ready.forEach(function(r) {
+                        callback && callback(r.guid, r.id, false);
+                    });
                 }
             });
         });
         return btns;
     };
 
+    // fork-specific: release child views of removed field groups (Mixtbar owns the outer slot)
+    var _disposeFieldGroups = function(controls) {
+        if (!controls || !Common.UI.PluginFieldGroup) return;
+        controls.forEach(function(ctrl) {
+            (ctrl instanceof Common.UI.PluginFieldGroup) && ctrl.dispose();
+        });
+    };
+
     var _clearCustomControls = function(guid) {
         if (!_toolbar) return;
         if (_arrPlugins[guid] && _arrPlugins[guid].tabs) {
             _arrPlugins[guid].tabs.forEach(function(tab) {
-                _toolbar.addCustomControls({action: tab}, undefined, _findRemovedControls(_toolbar, tab, guid));
+                var removed = _findRemovedControls(_toolbar, tab, guid);
+                _toolbar.addCustomControls({action: tab}, undefined, removed);
+                _disposeFieldGroups(removed);
             });
             _arrPlugins[guid].tabs = [];
         }
